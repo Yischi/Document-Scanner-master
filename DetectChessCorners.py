@@ -9,7 +9,7 @@ widthImg  = 1000
 FieldSize = 100
 
 BASE = os.path.dirname(__file__)
-pathImage = "SchachBrett2.jpg"
+pathImage = "SchachBrett3.jpg"
 # termination criteria
 criteria = (cv.TERM_CRITERIA_EPS + cv.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
@@ -26,6 +26,8 @@ gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 # Find the chess board corners
 ret, corners = cv.findChessboardCorners(gray, (7,7), None)
  # If found, add object points, image points (after refining them)
+
+img = cv.Canny(img,100,200)
 if ret == True:
     #get Corner Position of the 1. Rank
     #print(corners)
@@ -52,7 +54,7 @@ if ret == True:
 else:
     ret, corners = cv.findChessboardCorners(gray, (5, 5), None)
 
-#cv.imshow('img', img)
-cv.imshow('img', imgWarpColored)
+cv.imshow('img', img)
+#cv.imshow('img', imgWarpColored)
 
 cv.waitKey(500000)
