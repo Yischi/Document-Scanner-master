@@ -4,8 +4,14 @@ import numpy as np
 class SchachBild:
     def __init__(self, fieldSize):
         self.FieldSize = fieldSize
+        self.Tolerance = int(fieldSize * 0.1)
+        self.InnerField = fieldSize - 2 * self.Tolerance
         print("init fin")
 
+    def _setupBackground(self, frame):
+        self.backSub = cv.createBackgroundSubtractorKNN(1, 16, True)
+        frame = self.filterChessboard(frame)
+        self.backSub.apply(frame)
 
     def initialFrame(self, frame):
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
@@ -26,11 +32,48 @@ class SchachBild:
             print(3)
             self.matrix = cv.getPerspectiveTransform(pts1, pts2)
             print("Calculated matrix")
+
+            self._setupBackground(frame)
         else:
             print("NO CHECK BOARD")
+        return ret
+
+    def _useBackGroundSubtraction(self, frame):
+        frame = self.backSub.apply(frame)
+        return frame
 
     def filterChessboard(self, frame):
         return cv.warpPerspective(frame, self.matrix, (self.FieldSize * 8, self.FieldSize * 8))
+
+    def _getCornerPersentage(self, img, X, Y):
+        foundedCorners = 0
+        for x in range(self.InnerField):
+            for y in range(self.InnerField):
+                # print(img[X*FieldSize + x, Y*FieldSize +y])
+                if img[X*self.FieldSize + x + self.Tolerance, Y*self.FieldSize +y+ self.Tolerance] != 0:
+                    foundedCorners += 1
+
+        persentage = foundedCorners / (self.FieldSize * self.FieldSize)
+        print(persentage)
+        return persentage > 0.02
+
+    def findChessPeases(self, frame):
+        frame = self.filterChessboard(frame)
+        frame = self._useBackGroundSubtraction(frame)
+
+        #imgCanny = cv.Canny(frame, 100, 150)
+        foundedFigures = []
+        for Y in range(8):
+            for X in range(8):
+                if self._getCornerPersentage(frame, X, Y):
+                    foundedFigures.append([X,Y])
+        return foundedFigures, frame
+
+    def draw(self,img,  X, Y):
+        img = cv.rectangle(img, (X * self.FieldSize, Y *self.FieldSize), ((X+1)*self.FieldSize, (Y+1)*self.FieldSize), (0, 255, 0), 3)
+        return img
+
+
 
 
 
@@ -55,15 +98,16 @@ def main():
         ret, frame = cap.read()
         cv.imshow("preview", frame)
         if cv.waitKey(1) & 0xFF == ord("q"):
-            break
-    schachBild = SchachBild(100)
-    print("test")
-    schachBild.initialFrame(frame)
-    print("init schachBild")
+            schachBild = SchachBild(100)
+            print("test")
+            ret = schachBild.initialFrame(frame)
+            if ret:
+                print("init schachBild")
+                break
 
     #show chess board
-    chessborad = schachBild.filterChessboard(frame)
-    cv.imshow("preview", chessborad)
+    ChessBoard = schachBild.filterChessboard(frame)
+    cv.imshow("preview", ChessBoard)
     print("showed schachBild")
 
 
@@ -73,12 +117,28 @@ def main():
         # Capture frame-by-frame
 
         ret, frame = cap.read()
-        frame = schachBild.filterChessboard(frame)
-
-        # Display the resulting frame
         if ret:
-            cv.imshow("preview", frame)
-            print("new Frame")
+
+            if cv.waitKey(1) & 0xFF == ord("w"):
+                # find peases in frame
+                foundPeases, frame = schachBild.findChessPeases(frame)
+                print(foundPeases)
+                #mark founded peases
+                for pos in foundPeases :
+                    frame = schachBild.draw(frame, pos[0], pos[1])
+
+                # Display the resulting frame
+                cv.imshow("preview", frame)
+                print("new Frame")
+                while True:
+                    if cv.waitKey(1) & 0xFF == ord("q"):
+                        break
+
+            else:
+                frame = schachBild.filterChessboard(frame)
+                #frame = schachBild._useBackGroundSubtraction(frame)
+        cv.imshow("preview", frame)
+        print("new Frame")
         # Waits for a user input to quit the application
 
         if cv.waitKey(1) & 0xFF == ord("q"):

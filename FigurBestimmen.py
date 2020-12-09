@@ -30,27 +30,33 @@ def TransformeImage(img):
     return imgWarpColored
 
 def getCornerPersentage(img, X,Y):
+
+    toleranze = int(FieldSize * 0.1)
     foundedCorners = 0
-    for x in range(FieldSize):
-        for y in range(FieldSize):
-            #print(img[X*FieldSize + x, Y*FieldSize +y])
-            if img[X*FieldSize + x, Y*FieldSize +y] != 0:
+    for x in range(FieldSize - 2 * toleranze):
+        for y in range(FieldSize - 2 * toleranze):
+            if img[X*FieldSize + x +toleranze, Y*FieldSize +y+ toleranze] != 0:
                 foundedCorners += 1
 
-    print("X " + str(X) + " Y " + str(Y) + ": " + str(foundedCorners))
-    return foundedCorners/ (FieldSize * FieldSize)
+    persentage = foundedCorners/ (FieldSize * FieldSize)
+    print(persentage)
+    return persentage > 0.02
 
 def main():
     img = getImage()
-    imgCanny = cv.Canny(img, 100, 150)
-    imgResult = TransformeImage(imgCanny)
-    persentages = []
+    chessimg = TransformeImage(img)
+    imgCanny = cv.Canny(chessimg, 100, 150)
+    foundedPeases = []
     for Y in range(8):
-        rank = []
         for X in range(8):
-            rank.append(getCornerPersentage(imgCanny, X,Y))
-        persentages.append(rank)
-    print(persentages)
+            if getCornerPersentage(imgCanny, Y,X):
+                foundedPeases.append([X,Y])
+    print(foundedPeases)
+    for pos in foundedPeases:
+        X = pos[0]
+        Y = pos[1]
+        imgResult = cv.rectangle(chessimg, (X * FieldSize, Y*FieldSize), ((X+1) * FieldSize, (Y+1) * FieldSize), (0, 255, 0), 6)
+
     cv.imshow('img', imgResult)
     cv.waitKey(500000)
 
