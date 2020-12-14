@@ -4,6 +4,7 @@ import os
 
 FieldSize = 100
 
+
 def getImage():
 
     BASE = os.path.dirname(__file__)
@@ -35,12 +36,14 @@ def getCornerPersentage(img, X,Y):
     foundedCorners = 0
     for x in range(FieldSize - 2 * toleranze):
         for y in range(FieldSize - 2 * toleranze):
-            if img[X*FieldSize + x +toleranze, Y*FieldSize +y+ toleranze] != 0:
+            if img[X*FieldSize + x +toleranze, Y*FieldSize +y+ toleranze] > 0:
                 foundedCorners += 1
 
     persentage = foundedCorners/ (FieldSize * FieldSize)
     print(persentage)
     return persentage > 0.02
+
+
 
 def main():
     img = getImage()
