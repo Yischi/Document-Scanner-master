@@ -171,7 +171,7 @@ class SchachBild:
             for X in range(8):
                 for Y in range(8):
                     if currentPeases[X][Y] == True:
-                        if self._getCornerPersentage(imgBS, X, Y, 150, 10):
+                        if self._getCornerPersentage(imgBS, X, Y, 100, 10):
 
                             move.endPos = [X,Y]
                             print("taken")
@@ -305,8 +305,6 @@ def main():
 
         if cv.waitKey(1) & 0xFF == ord("q"):
             break
-
-    # When everything done, release the capture
 
     cap.release()
 
